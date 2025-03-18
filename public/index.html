@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circuit Breaker Demo</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .card {
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .status-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .closed {
+            background-color: #10B981; /* green */
+        }
+        .open {
+            background-color: #EF4444; /* red */
+        }
+        .half-open {
+            background-color: #F59E0B; /* amber */
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-10 text-center">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">Circuit Breaker Pattern Demo</h1>
+            <p class="text-lg text-gray-600">Comparación entre solicitudes API con y sin Circuit Breaker</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+            <!-- Sin Circuit Breaker -->
+            <div class="card bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Sin Circuit Breaker</h2>
+                <p class="text-gray-600 mb-6">
+                    Esta versión hace solicitudes directas al API sin protección de Circuit Breaker.
+                    Falla cuando el API falla sin estrategia de recuperación.
+                </p>
+                <div class="mb-4">
+                    <button id="test-no-breaker" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">
+                        Probar Endpoint
+                    </button>
+                    <span id="counter-no-breaker" class="ml-4 font-semibold text-gray-700">0 solicitudes</span>
+                </div>
+                <div>
+                    <div class="bg-gray-100 p-4 rounded-lg max-h-56 overflow-y-auto">
+                        <pre id="results-no-breaker" class="text-sm text-gray-800 whitespace-pre-wrap"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Con Circuit Breaker -->
+            <div class="card bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Con Circuit Breaker</h2>
+                <p class="text-gray-600 mb-6">
+                    Esta versión utiliza el patrón Circuit Breaker para proteger contra fallos
+                    y proporciona respuestas alternativas cuando el servicio no está disponible.
+                </p>
+                <div class="mb-4">
+                    <button id="test-with-breaker" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">
+                        Probar Endpoint
+                    </button>
+                    <span id="counter-with-breaker" class="ml-4 font-semibold text-gray-700">0 solicitudes</span>
+                </div>
+                <div>
+                    <div class="bg-gray-100 p-4 rounded-lg max-h-56 overflow-y-auto">
+                        <pre id="results-with-breaker" class="text-sm text-gray-800 whitespace-pre-wrap"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado del Circuit Breaker -->
+        <div class="card bg-white rounded-lg shadow-md p-6 mb-10">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Estado del Circuit Breaker</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <span class="font-medium text-gray-700 mr-2">Estado actual:</span> 
+                        <span class="status-circle closed" id="status-indicator"></span>
+                        <span id="status-text" class="ml-2 font-semibold">CLOSED</span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="font-medium text-gray-700">Solicitudes exitosas:</span> 
+                        <span id="success-count" class="ml-2"></span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="font-medium text-gray-700">Solicitudes fallidas:</span> 
+                        <span id="failure-count" class="ml-2"></span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="font-medium text-gray-700">Ratio de errores:</span> 
+                        <span id="failure-rate" class="ml-2"></span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="font-medium text-gray-700">Último cambio de estado:</span> 
+                        <span id="last-state-change" class="ml-2"></span>
+                    </div>
+                </div>
+                <div>
+                    <div class="mb-2">
+                        <span class="font-medium text-gray-700">Umbral de fallos:</span> 
+                        <span id="threshold" class="ml-2"></span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="font-medium text-gray-700">Tiempo de enfriamiento:</span> 
+                        <span id="cooldown" class="ml-2"></span>
+                    </div>
+                    <div class="mt-4">
+                        <button id="refresh-status" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded">
+                            Actualizar Estado
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+       
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+module.exports = {
+    PORT: 3000,
+    API_URL: 'http://localhost:3000',
+    API_FAILURE_RATE: 0.99,
+    CIRCUIT_BREAKER_THRESHOLD: 3,
+    CIRCUIT_BREAKER_COOLDOWN: 10000,
+    CIRCUIT_BREAKER_TIMEOUT: 5000
+};
