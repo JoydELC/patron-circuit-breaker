@@ -76,11 +76,10 @@ La implementación del patrón Circuit Breaker ha demostrado ser efectiva en:
    - Proporciona respuestas rápidas incluso cuando los servicios dependientes fallan
    - Permite recuperación automática sin intervención manual
    - Proporciona información valiosa sobre estado y salud de los servicios
-  
-## Interfaz
-![image](https://github.com/user-attachments/assets/e01dd9e6-08cf-43e1-99ac-cd2cdbb77c7c)
-
 
 3. **Consideraciones de configuración**:
    - El umbral de fallos y tiempo de enfriamiento deben ajustarse según el contexto específico
    - La elección de una respuesta alternativa adecuada es crucial para mantener la funcionalidad básica
+  
+## Interfaz
+![image](https://github.com/user-attachments/assets/e01dd9e6-08cf-43e1-99ac-cd2cdbb77c7c)
