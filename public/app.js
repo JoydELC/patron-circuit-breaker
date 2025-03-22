@@ -1,15 +1,14 @@
-// Elementos DOM
 const testNoBreaker = document.getElementById('test-no-breaker');
 const testWithBreaker = document.getElementById('test-with-breaker');
 const refreshStatus = document.getElementById('refresh-status');
+const startAuto = document.getElementById('startAuto');
+const stopAuto = document.getElementById('stopAuto');
 
 const counterNoBreaker = document.getElementById('counter-no-breaker');
 const counterWithBreaker = document.getElementById('counter-with-breaker');
 const resultsNoBreaker = document.getElementById('results-no-breaker');
 const resultsWithBreaker = document.getElementById('results-with-breaker');
 
-
-// Elementos de estado
 const statusIndicator = document.getElementById('status-indicator');
 const statusText = document.getElementById('status-text');
 const successCount = document.getElementById('success-count');
@@ -19,45 +18,38 @@ const lastStateChange = document.getElementById('last-state-change');
 const threshold = document.getElementById('threshold');
 const cooldown = document.getElementById('cooldown');
 
-
-// Contadores
 let noBreakerCount = 0;
 let withBreakerCount = 0;
 let autoTestInterval = null;
+let statusPollingInterval = null;
 
-// Función para actualizar la interfaz de estado del Circuit Breaker
 function updateCircuitBreakerStatus() {
     fetch('/circuit-breaker-status/custom')
         .then(response => response.json())
         .then(data => {
-            console.log('Circuit breaker status:', data);
-            
-            // Actualizar indicador visual
             statusIndicator.className = 'status-circle ' + data.state.toLowerCase();
             statusText.textContent = data.state;
             
-            // Actualizar estadísticas
-            // Usar successfulCalls en lugar de successCount que no existe en tu implementación
-            successCount.textContent = data.successfulCalls || 0;
+            // successCount.textContent = data.successfulCalls || 0;
             failureCount.textContent = data.failureCount || 0;
             
-            // Calcular tasa de fallos
             const totalCalls = data.totalCalls || 0;
-            const rate = totalCalls > 0 ? 
-                ((data.failureCount / totalCalls) * 100).toFixed(1) : '0';
-            failureRate.textContent = `${rate}%`;
+            // const rate = totalCalls > 0 ? 
+            //     ((data.failureCount / totalCalls) * 100).toFixed(1) : '0';
+            // failureRate.textContent = `${rate}%`;
             
-            // Actualizar configuración
             threshold.textContent = data.threshold || 'N/A';
             cooldown.textContent = `${data.cooldown || 0}ms`;
             
-            // Mostrar tiempo restante o última vez que cambió de estado
-            // Tu implementación no tiene lastStateChange, pero tiene nextAttempt
             if (data.nextAttempt && data.state === 'OPEN') {
                 const remainingTime = Math.max(0, data.nextAttempt - Date.now());
                 lastStateChange.textContent = remainingTime > 0 ? 
-                    `Se abrirá en ${Math.ceil(remainingTime/1000)}s` : 
+                    `Cooldown termina en ${Math.ceil(remainingTime/1000)}s` : 
                     'Pendiente de prueba';
+                
+                if (remainingTime > 0 && remainingTime < 1500) {
+                    setTimeout(updateCircuitBreakerStatus, remainingTime + 100);
+                }
             } else {
                 lastStateChange.textContent = data.state === 'CLOSED' ? 'Cerrado' : 
                     data.state === 'HALF-OPEN' ? 'En prueba' : '-';
@@ -68,13 +60,10 @@ function updateCircuitBreakerStatus() {
         });
 }
 
-// Formatear fecha para log
 function formatTimestamp() {
-    const now = new Date();
-    return now.toLocaleTimeString();
+    return new Date().toLocaleTimeString();
 }
 
-// Función para llamar al endpoint sin circuit breaker
 function testNoCircuitBreaker() {
     const timestamp = formatTimestamp();
     noBreakerCount++;
@@ -97,7 +86,6 @@ function testNoCircuitBreaker() {
         });
 }
 
-// Función para llamar al endpoint con circuit breaker
 function testWithCircuitBreaker() {
     const timestamp = formatTimestamp();
     withBreakerCount++;
@@ -113,7 +101,6 @@ function testWithCircuitBreaker() {
         .then(data => {
             let logEntry = `[${timestamp}] `;
             
-            // Verificar si estamos obteniendo el contenido de fallback
             if (data.data && data.data.includes('alternative content')) {
                 logEntry += `⚠️ FALLBACK: ${JSON.stringify(data)}\n`;
             } else {
@@ -121,22 +108,40 @@ function testWithCircuitBreaker() {
             }
             
             resultsWithBreaker.textContent = logEntry + resultsWithBreaker.textContent;
-            updateCircuitBreakerStatus(); // Actualizar el estado después de cada llamada
+            updateCircuitBreakerStatus();
         })
         .catch(error => {
             const logEntry = `[${timestamp}] ❌ ERROR: ${error.message}\n`;
             resultsWithBreaker.textContent = logEntry + resultsWithBreaker.textContent;
-            updateCircuitBreakerStatus(); // Actualizar el estado después de cada error
+            updateCircuitBreakerStatus();
         });
 }
 
+function startAutoTests() {
+    if (!autoTestInterval) {
+        autoTestInterval = setInterval(() => {
+            testWithCircuitBreaker();
+        }, 1000);
+    }
+}
 
-// Inicializar la aplicación
+function stopAutoTests() {
+    if (autoTestInterval) {
+        clearInterval(autoTestInterval);
+        autoTestInterval = null;
+    }
+}
+
+function startStatusPolling() {
+    if (!statusPollingInterval) {
+        statusPollingInterval = setInterval(updateCircuitBreakerStatus, 2000);
+    }
+}
+
 function initApp() {
-    // Cargar el estado inicial del Circuit Breaker
     updateCircuitBreakerStatus();
+    startStatusPolling();
     
-    // Agregar event listeners
     testNoBreaker.addEventListener('click', testNoCircuitBreaker);
     testWithBreaker.addEventListener('click', testWithCircuitBreaker);
     refreshStatus.addEventListener('click', updateCircuitBreakerStatus);
@@ -144,5 +149,4 @@ function initApp() {
     stopAuto.addEventListener('click', stopAutoTests);
 }
 
-// Iniciar la aplicación cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', initApp);

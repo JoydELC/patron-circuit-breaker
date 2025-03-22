@@ -7,16 +7,35 @@ const config = require('./config');
 
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
-// API Mock
-app.get('/api',
-    async (req,res)=> {
-        if(Math.random()> config.API_FAILURE_RATE){
-            res.json({data: 'Success'});
-        } else {
-            res.status(500).json({error:'Error with API'});
-        }
+// // API Mock
+// app.get('/api',
+//     async (req,res)=> {
+//         if(Math.random()> config.API_FAILURE_RATE){
+//             res.json({data: 'Success'});
+//         } else {
+//             res.status(500).json({error:'Error with API'});
+//         }
+//     }
+// );
+
+// API Mock with deterministic behavior pattern
+let requestCounter = 0;
+
+app.get('/api', async (req, res) => {
+    requestCounter++;
+    
+    if (requestCounter <= 3) {
+        return res.status(500).json({ error: 'Error with API' });
     }
-);
+    
+    if (requestCounter <= 8) {
+        return res.json({ data: 'Success' });
+    }
+    
+    requestCounter = 0;
+    return res.status(500).json({ error: 'Error with API' });
+});
+
 
 //Middleware for handling errors
 const errorHandler = (err, req, res, next) => {

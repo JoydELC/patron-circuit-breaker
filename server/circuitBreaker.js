@@ -48,7 +48,7 @@ class CircuitBreaker {
             HALF_OPEN: 'HALF-OPEN'
         };
         
-        // Número de éxitos necesarios en estado HALF-OPEN para cerrar el circuito
+        
         this.successThreshold = 2;
         
         console.log(`Circuit Breaker "${this.name}" created with threshold=${threshold}, cooldown=${cooldown}ms`);
@@ -104,7 +104,7 @@ class CircuitBreaker {
 }
 
 /**
- * Executing actio
+ * Executing action
  * @private
  * @returns {Promise} Action esult
  */
@@ -135,6 +135,14 @@ open() {
     this.state = this.STATES.OPEN;
     this.nextAttempt = Date.now() + this.cooldown;
     console.log(`Circuit Breaker "${this.name}": Open till ${new Date(this.nextAttempt).toISOString()}`);
+    
+    
+    setTimeout(() => {
+        if (this.state === this.STATES.OPEN) {
+            this.state = this.STATES.HALF_OPEN;
+            console.log(`Circuit Breaker "${this.name}": auto-transition to HALF-OPEN`);
+        }
+    }, this.cooldown + 100); 
 }
 
 /**
